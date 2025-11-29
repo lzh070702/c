@@ -40,16 +40,3 @@ int open(const char *pathname,int flags,mode_t mode)
 ssize_t read(int fd, void *buf, size_t count);
 ```
 2. 函数参数
-3. 函数返回值
-
-
-
-
-
-
-
-
-fcntl()的用途之一是针对一个打开的文件，获取或修改其访问模式和状态标志（这些值是
-通过指定 open()调用的 flag 参数来设置的）。要获取这些设置，应将 fcntl()的 cmd 参数设置为
-F_GETFL。
-
