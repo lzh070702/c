@@ -8,7 +8,7 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 
-int open(const char *pathname,int flags,mode_t mode)
+int open(const char* pathname,int flags,mode_t mode)
 ```
 2. 函数参数
 * pathname:文件路径
@@ -22,7 +22,6 @@ int open(const char *pathname,int flags,mode_t mode)
 * mode:文件权限
   > 仅在O_CREAT时填写（创建新文件时需要指明权限）
 3. 函数返回值
-* 失败：返回-1并设置errno
 * 成功：返回fd（>=3）
   > 文件描述符
   
@@ -31,12 +30,37 @@ int open(const char *pathname,int flags,mode_t mode)
   |0|标准输入|STDIN_FILENO|stdin|
   |1|标准输出|STDOUT_FILENO|stdout|
   |2|标准错误|STDERR_FILENO|stderr|
+* 失败：返回-1并设置errno
 ### read()函数
-> read()系统调用从文件描述符 fd 所指代的打开文件中读取数据。 
+> read()系统调用从文件描述符 fd 所指代的打开文件中读取数据
 1. 函数原型
 ```c
 #include <unistd.h>
 
-ssize_t read(int fd, void *buf, size_t count);
+ssize_t read(int fd, void* buf, size_t count);
 ```
 2. 函数参数
+* fd：文件描述符
+* buf：存放输入数据的内存缓冲区地址
+  > 缓冲区至少应有 count 个字节
+* count：最多能读取的字节数
+3. 函数返回值
+* 成功：返回实际读取的字节数，如果遇到文件结束（EOF）则返回 0
+* 失败：返回-1并设置errno
+### write()函数
+> read()系统调用从文件描述符 fd 所指代的打开文件中读取数据
+1. 函数原型
+```c
+#include <unistd.h>
+
+ssize_t write(int fd, const void *buf, size_t count);
+```
+2. 函数参数
+* fd：文件描述符
+* buf：要写入文件中数据的内存地址
+  > 缓冲区至少应有 count 个字节
+* count：欲从 buf 写入文件的数据字节数
+3. 函数返回值
+* 成功：返回实际写入的字节数，如果无数据写入则返回 0
+* 失败：返回-1并设置errno
+
