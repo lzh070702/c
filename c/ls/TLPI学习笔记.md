@@ -1,5 +1,5 @@
 # 函数
-## 系统调用函数
+## 第4章 文件 I/O：通用的 I/O 模型
 ### open()函数
 > open()调用既能打开一个业已存在的文件，也能创建并打开一个新文件。
 1. 函数原型
@@ -10,7 +10,7 @@
 int open(const char* pathname,int flags,mode_t mode);
 ```
 2. 函数参数
-* pathname:文件路径
+* pathname：文件路径
 * flags：打开方式
   * O_RDONLY：以只读方式打开文件（0）
   * O_WRONLY：以只写方式打开文件（1）
@@ -94,47 +94,42 @@ off_t lseek(int fd,off_t offset,int whence);
 3. 函数返回值
 * 成功：返回相对文件起始位置的新偏移量
 * 失败：返回-1并设置errno
-
-
-
-
-
-
-* 
-* 
-* 
-* 
-* 
-* 
-* 
-* 
-* 
-* 
-* 
-* 
-* 
-* 
-* 
-* 
-* 
-fcntl()的用途之一是针对一个打开的文件，获取或修改其访问模式和状态标志（这些值是
-通过指定 open()调用的 flag 参数来设置的）。要获取这些设置，应将 fcntl()的 cmd 参数设置为
-F_GETFL。
-
-
-
-
-### stat()函数
-> 利用系统调用 stat()、lstat()以及 fstat()，可获取与文件有关的信息，其中大部分提取自文
-件 i 节点。
+## 第18章 目录与链接
+### opendir()函数
+> opendir()函数打开一个目录，并返回指向该目录的句柄，供后续调用使用
 1. 函数原型
 ```c
-#include <unistd.h>
+#include <dirent.h>
 
-int stat(const char *pathname, struct stat *statbuf);
-int lstat(const char *pathname, struct stat *statbuf);
-int fstat(int fd , struct stat *statbuf);
+DIR* opendir(const char * dirpath );
 ```
 2. 函数参数
-* 
+* path：目录路径
 3. 函数返回值
+* 成功：返回指向`DIR`结构体的指针
+
+* 失败：返回`NULL`并设置errno
+### readdir()函数
+> readdir()函数从一个目录流中读取连续的条目
+1. 函数原型
+```c
+#include <dirent.h>
+
+struct direct* readdir(DIR* dirp);
+```
+2. 函数参数
+* dirp:目录流句柄
+  > 每调用 readdir()一次，就会从 dirp 所指代的目录流中读取下一目录条目，并返回一枚指针，
+指向经静态分配而得的 dirent 类型结构，内含与该条目相关的如下信息：
+  ```c
+  struct direct
+  {
+      ino_t d_ino;    // i-node编号
+      char d_name[];  // NULL字节结尾的文件名
+  }
+  ```
+  > 每次调用 readdir()都会覆盖该结构。
+3. 函数返回值
+* 成功：返回指向当前目录项的struct dirent*指针
+* 读取结束：返回NULL，且errno保持不变（需通过  errno  判断是“结束”还是“错误”）
+* 失败：返回`NULL`并设置errno
