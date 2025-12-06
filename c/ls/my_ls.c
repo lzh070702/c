@@ -1,7 +1,9 @@
+#include <dirent.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/stat.h>
 
 int main(int argc, char* argv[]) {
     int len = 0;
@@ -9,6 +11,8 @@ int main(int argc, char* argv[]) {
     int file_num = 0;
     char** file = (char**)malloc(argc * sizeof(char*));
     char* parameter = (char*)malloc(1);
+    bool a = false, l = false, R = false, t = false;
+    bool r = false, i = false, s = false;
     for (int i = 1; i < argc; i++) {
         if (argv[i][0] != '-') {
             file[file_num++] = argv[i];
@@ -29,8 +33,9 @@ int main(int argc, char* argv[]) {
             parameter[len++] = argv[i][j];
         }
     }
-    if (!file_num) {
+    if (!file_num || argc == 1) {
         file[0] = ".";
+        file_num = 1;
     }
     parameter[size] = '\0';
     for (int i = 0; i < size; i++) {
@@ -49,6 +54,21 @@ int main(int argc, char* argv[]) {
             continue;
         } else {
             parameter[len++] = parameter[i];
+            if (parameter[i] == 'a') {
+                a = true;
+            } else if (parameter[i] == 'l') {
+                l = true;
+            } else if (parameter[i] == 'R') {
+                R = true;
+            } else if (parameter[i] == 't') {
+                t = true;
+            } else if (parameter[i] == 'r') {
+                r = true;
+            } else if (parameter[i] == 'i') {
+                i = true;
+            } else {
+                s = true;
+            }
         }
     }
     size = len;
@@ -57,14 +77,26 @@ int main(int argc, char* argv[]) {
 
     // 参数处理
 
-    printf("%d\n", file_num);  // 文件个数
     for (int i = 0; i < file_num; i++) {
-        printf("%s\n", file[i]);
-    }  // 文件
-    printf("%d\n", size);       // 参数个数
-    printf("%s\n", parameter);  // 参数
+        struct stat statbuf;
+        stat(file[i], &statbuf);
+        if (S_ISREG(statbuf.st_mode)) {  // 普通文件
+            printf("%s\n", file[i]);
+        } else {
+            DIR* dir = opendir(file[i]);
+            struct dirent* d_file;  // 目录下的文件
+            while ((d_file = readdir(dir)) != NULL) {
+                if (!a && d_file->d_name[0] == '.') {  // 参数 a 的执行
+                    continue;
+                }
+                printf("%s\n", d_file->d_name);
+            }
+            printf("\n");
+            closedir(dir);
+        }
+    }
 
-    //
+    // 参数执行
 
     free(file);
     free(parameter);
