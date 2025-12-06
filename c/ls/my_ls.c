@@ -6,24 +6,28 @@
 #include <sys/stat.h>
 
 int main(int argc, char* argv[]) {
-    int len = 0;
-    int size = 0;
-    int file_num = 0;
-    char** file = (char**)malloc(argc * sizeof(char*));
-    char* parameter = (char*)malloc(1);
-    bool a = false, l = false, R = false, t = false;
-    bool r = false, i = false, s = false;
+    // 以下为参数的处理
+    int len = 0, size = 0;                               // 参数长度
+    int file_num = 0;                                    // 文件个数
+    char** file = (char**)malloc(argc * sizeof(char*));  // 用于存放文件路径
+    char* parameter = (char*)malloc(1);                  // 用于存放选项
+    bool a = false, l = false, R = false, t = false;     // 选项
+    bool r = false, I = false, s = false;  // 为防止变量冲突，此处将选项i记为I
+    // 分别存放文件路径和选项
     for (int i = 1; i < argc; i++) {
+        // 存放文件路径
         if (argv[i][0] != '-') {
             file[file_num++] = argv[i];
             continue;
         }
+        // 存放选项
         size += strlen(argv[i]) - 1;
         parameter = (char*)realloc(parameter, size + 1);
         for (int j = 1; j < strlen(argv[i]); j++) {
+            // 判断选项是否有效
             if (argv[i][j] != 'a' && argv[i][j] != 'l' && argv[i][j] != 'R' &&
                 argv[i][j] != 't' && argv[i][j] != 'r' && argv[i][j] != 'i' &&
-                argv[i][j] != 's') /*参数无效*/ {
+                argv[i][j] != 's') {
                 printf("ls: 无效的选项 -- %c\n", argv[i][j]);
                 printf("请尝试执行 \"ls --help\" 来获取更多信息。\n");
                 free(file);
@@ -33,11 +37,13 @@ int main(int argc, char* argv[]) {
             parameter[len++] = argv[i][j];
         }
     }
+    // 未输入文件路径的情况
     if (!file_num || argc == 1) {
         file[0] = ".";
         file_num = 1;
     }
     parameter[size] = '\0';
+    // 选项去重（冗长，有时间再改，可不去重）
     for (int i = 0; i < size; i++) {
         if (parameter[i] == ' ') {
             continue;
@@ -65,7 +71,7 @@ int main(int argc, char* argv[]) {
             } else if (parameter[i] == 'r') {
                 r = true;
             } else if (parameter[i] == 'i') {
-                i = true;
+                I = true;
             } else {
                 s = true;
             }
@@ -74,30 +80,36 @@ int main(int argc, char* argv[]) {
     size = len;
     parameter = (char*)realloc(parameter, size + 1);
     parameter[size] = '\0';
-
-    // 参数处理
-
+    // 以上为参数的处理
+    // 以下为选项的执行
     for (int i = 0; i < file_num; i++) {
         struct stat statbuf;
         stat(file[i], &statbuf);
-        if (S_ISREG(statbuf.st_mode)) {  // 普通文件
+        if (S_ISREG(statbuf.st_mode)) /*普通文件*/ {
+            // 参数 I(i) 的执行
+            if (I) {
+                printf("%ld ", statbuf.st_ino);
+            }
             printf("%s\n", file[i]);
-        } else {
+        } else /*目录文件*/ {
             DIR* dir = opendir(file[i]);
             struct dirent* d_file;  // 目录下的文件
             while ((d_file = readdir(dir)) != NULL) {
-                if (!a && d_file->d_name[0] == '.') {  // 参数 a 的执行
+                // 参数 a 的执行
+                if (!a && d_file->d_name[0] == '.') {
                     continue;
+                }
+                struct stat d_statbuf;
+                stat(d_file->d_name, &d_statbuf);
+                if (I) {
+                    printf("%ld ", d_statbuf.st_ino);
                 }
                 printf("%s\n", d_file->d_name);
             }
-            printf("\n");
             closedir(dir);
         }
     }
-
-    // 参数执行
-
+    // 以上为选项的执行
     free(file);
     free(parameter);
     return 0;
