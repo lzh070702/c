@@ -1,3 +1,4 @@
+#define _DEFAULT_SOURCE
 #include <ctype.h>
 #include <dirent.h>
 #include <grp.h>
@@ -7,6 +8,10 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>
+
+bool a = false, l = false, R = false;  // 选项
+bool t = false, r = false, s = false;  // 选项
+bool I = false;                        // 选项，为防止变量冲突，将i记为I
 
 int file_qsort(const void* a, const void* b) {
     const char* cmp_a = *(const char**)a;
@@ -52,19 +57,40 @@ int r_file_qsort(const void* a, const void* b) {
     return file_qsort(b, a);
 }
 
+int t_file_qsort(const void* a, const void* b) {}
+
+int tr_file_qsort(const void* a, const void* b) {
+    return t_file_qsort(b, a);
+}
+
+int scandir_sort(const struct dirent** a, const struct dirent** b) {
+    const char* name_a = (*a)->d_name;
+    const char* name_b = (*b)->d_name;
+    return file_qsort(&name_a, &name_b);
+}
+
+int r_scandir_sort(const struct dirent** a, const struct dirent** b) {
+    return scandir_sort(b, a);
+}
+
+int t_scandir_sort(const struct dirent** a, const struct dirent** b) {}
+
+int tr_scandir_sort(const struct dirent** a, const struct dirent** b) {
+    return t_scandir_sort(b, a);
+}
+
 int main(int argc, char* argv[]) {
     // 参数的分类
-    int file_num = 0;                                      // 文件个数
-    int o_file_num = 0;                                    // 普通文件个数
-    int d_file_num = 0;                                    // 目录文件个数
-    int len = 0, num = 0;                                  // 选项个数
-    char** file = (char**)malloc(argc * sizeof(char*));    // 存放文件路径
-    char** o_file = (char**)malloc(argc * sizeof(char*));  // 存放普通文件路径
-    char** d_file = (char**)malloc(argc * sizeof(char*));  // 存放目录文件路径
-    char* parameter = (char*)malloc(1);                    // 存放选项
-    bool a = false, l = false, R = false;                  // 选项
-    bool t = false, r = false, s = false;                  // 选项
-    bool I = false;  // 选项，为防止变量冲突，将i记为I
+
+    int file_num = 0;                                     // 文件个数
+    int ofile_num = 0;                                    // 普通文件个数
+    int dfile_num = 0;                                    // 目录文件个数
+    int len = 0, num = 0;                                 // 选项个数
+    char** file = (char**)malloc(argc * sizeof(char*));   // 存放文件路径
+    char** ofile = (char**)malloc(argc * sizeof(char*));  // 存放普通文件路径
+    char** dfile = (char**)malloc(argc * sizeof(char*));  // 存放目录文件路径
+    char* parameter = (char*)malloc(1);                   // 存放选项
+
     for (int i = 1; i < argc; i++) {
         // 分别存放文件路径和选项
         if (argv[i][0] != '-') {
@@ -83,8 +109,8 @@ int main(int argc, char* argv[]) {
                 printf("ls: 无效的选项 -- %c\n", argv[i][j]);
                 printf("请尝试执行 \"ls --help\" 来获取更多信息。\n");
                 free(file);
-                free(d_file);
-                free(o_file);
+                free(dfile);
+                free(ofile);
                 free(parameter);
                 return 0;
             }
@@ -92,7 +118,9 @@ int main(int argc, char* argv[]) {
         }
     }
     parameter[num] = '\0';
+
     // 文件路径的分类
+
     if (!file_num) {
         // 未输入文件路径的情况
         file[0] = ".";
@@ -106,17 +134,19 @@ int main(int argc, char* argv[]) {
             printf("ls: 无法访问 '%s': 没有那个文件或目录", file[i]);
         } else if (S_ISREG(statbuf.st_mode)) {
             // 普通文件路径
-            o_file[o_file_num++] = file[i];
+            ofile[ofile_num++] = file[i];
         } else {
             // 目录文件路径
-            d_file[d_file_num++] = file[i];
+            dfile[dfile_num++] = file[i];
         }
     }
-    o_file = (char**)realloc(o_file, (o_file_num + 1) * sizeof(char*));
-    d_file = (char**)realloc(d_file, (d_file_num + 1) * sizeof(char*));
-    o_file[o_file_num] = NULL;
-    d_file[d_file_num] = NULL;
+    ofile = (char**)realloc(ofile, (ofile_num + 1) * sizeof(char*));
+    dfile = (char**)realloc(dfile, (dfile_num + 1) * sizeof(char*));
+    ofile[ofile_num] = NULL;
+    dfile[dfile_num] = NULL;
+
     // 选项的处理
+
     for (int i = 0; i < num; i++) {
         if (parameter[i] == 'a') {
             a = true;
@@ -134,26 +164,33 @@ int main(int argc, char* argv[]) {
             I = true;
         }
     }
+
     // 文件的排序
+
     if (!t && !r) {
-        qsort(o_file, o_file_num, sizeof(char*), file_qsort);
-        qsort(d_file, d_file_num, sizeof(char*), file_qsort);
+        qsort(ofile, ofile_num, sizeof(char*), file_qsort);
+        qsort(dfile, dfile_num, sizeof(char*), file_qsort);
     } else if (!t && r) {
-        qsort(o_file, o_file_num, sizeof(char*), r_file_qsort);
-        qsort(d_file, d_file_num, sizeof(char*), r_file_qsort);
+        qsort(ofile, ofile_num, sizeof(char*), r_file_qsort);
+        qsort(dfile, dfile_num, sizeof(char*), r_file_qsort);
     } else if (t && !r) {
+        qsort(ofile, ofile_num, sizeof(char*), t_file_qsort);
+        qsort(dfile, dfile_num, sizeof(char*), t_file_qsort);
     } else {
+        qsort(ofile, ofile_num, sizeof(char*), tr_file_qsort);
+        qsort(dfile, dfile_num, sizeof(char*), tr_file_qsort);
     }
 
-    // 选项的执行
-    for (int i = 0; i < o_file_num; i++) {
+    // 普通文件选项的执行
+
+    for (int i = 0; i < ofile_num; i++) {
         struct stat statbuf;
-        stat(o_file[i], &statbuf);
+        stat(ofile[i], &statbuf);
         if (I) {
             printf("%lu ", (unsigned long)statbuf.st_ino);
         }
         if (s) {
-            printf("%lu ", (unsigned long)statbuf.st_blocks / 2);
+            printf("%4lu ", (unsigned long)statbuf.st_blocks / 2);
         }
         if (l) {
             putchar(S_ISREG(statbuf.st_mode) ? '-' : 'd');
@@ -166,47 +203,85 @@ int main(int argc, char* argv[]) {
             putchar((statbuf.st_mode & S_IROTH) ? 'r' : '-');
             putchar((statbuf.st_mode & S_IWOTH) ? 'w' : '-');
             putchar((statbuf.st_mode & S_IXOTH) ? 'x' : '-');
-            printf(" %lu ", (unsigned long)statbuf.st_nlink);
+            printf(" %2lu ", (unsigned long)statbuf.st_nlink);
             printf("%s ", getpwuid(statbuf.st_uid)->pw_name);
             printf("%s ", getgrgid(statbuf.st_gid)->gr_name);
-            printf("%lu ", (unsigned long)statbuf.st_size);
+            printf("%6lu ", (unsigned long)statbuf.st_size);
+            // mtime
         }
-        printf("%s\n", o_file[i]);
+        printf("%s\n", ofile[i]);
     }
 
-    //
-    for (int i = 0; i < file_num; i++) {
-        struct stat statbuf;
-        stat(file[i], &statbuf);
-        if (S_ISREG(statbuf.st_mode)) {
-            // 普通文件
-            if (I) {
-                // 参数 I(i) 的执行
-                printf("%ld ", statbuf.st_ino);
-            }
-            printf("%s\n", file[i]);
+    // 目录文件选项的执行
+
+    for (int i = 0; i < dfile_num; i++) {
+        if (dfile_num > 1) {
+            printf("%s:", dfile[i]);
+        }
+        struct dirent** d_file;  // 目录下文件的结构体指针数组
+        int d_file_num = 0;
+        // 目录下文件排序
+        if (!t && !r) {
+            d_file_num = scandir(dfile[i], &d_file, NULL, scandir_sort);
+        } else if (!t && r) {
+            d_file_num = scandir(dfile[i], &d_file, NULL, r_scandir_sort);
+        } else if (t && !r) {
+            d_file_num = scandir(dfile[i], &d_file, NULL, t_scandir_sort);
         } else {
-            // 目录文件
-            DIR* dir = opendir(file[i]);
-            struct dirent* dir_file;  // 目录下的文件
-            while ((dir_file = readdir(dir)) != NULL) {
-                // 参数 a 的执行
-                if (!a && dir_file->d_name[0] == '.') {
+            d_file_num = scandir(dfile[i], &d_file, NULL, tr_scandir_sort);
+        }
+        if (l || s) {
+            // 计算目录下文件的总块数并打印
+            blkcnt_t st_blocks = 0;
+            for (int j = 0; j < d_file_num; j++) {
+                if (!a && d_file[j]->d_name[0] == '.') {
                     continue;
                 }
                 struct stat d_statbuf;
-                stat(dir_file->d_name, &d_statbuf);
-                if (I) {
-                    printf("%ld ", d_statbuf.st_ino);
-                }
-                printf("%s\n", dir_file->d_name);
+                stat(d_file[j]->d_name, &d_statbuf);
+                st_blocks += (d_statbuf.st_blocks / 2);
             }
-            closedir(dir);
+            printf("总计 ");
+            printf("%lu\n", (unsigned long)st_blocks);
         }
+        for (int j = 0; j < d_file_num; j++) {
+            if (!a && d_file[j]->d_name[0] == '.') {
+                continue;
+            }
+            struct stat d_statbuf;
+            stat(d_file[j]->d_name, &d_statbuf);
+            if (I) {
+                printf("%lu ", (unsigned long)d_statbuf.st_ino);
+            }
+            if (s) {
+                printf("%4lu ", (unsigned long)d_statbuf.st_blocks / 2);
+            }
+            if (l) {
+                putchar(S_ISREG(d_statbuf.st_mode) ? '-' : 'd');
+                putchar((d_statbuf.st_mode & S_IRUSR) ? 'r' : '-');
+                putchar((d_statbuf.st_mode & S_IWUSR) ? 'w' : '-');
+                putchar((d_statbuf.st_mode & S_IXUSR) ? 'x' : '-');
+                putchar((d_statbuf.st_mode & S_IRGRP) ? 'r' : '-');
+                putchar((d_statbuf.st_mode & S_IWGRP) ? 'w' : '-');
+                putchar((d_statbuf.st_mode & S_IXGRP) ? 'x' : '-');
+                putchar((d_statbuf.st_mode & S_IROTH) ? 'r' : '-');
+                putchar((d_statbuf.st_mode & S_IWOTH) ? 'w' : '-');
+                putchar((d_statbuf.st_mode & S_IXOTH) ? 'x' : '-');
+                printf(" %2lu ", (unsigned long)d_statbuf.st_nlink);
+                printf("%s ", getpwuid(d_statbuf.st_uid)->pw_name);
+                printf("%s ", getgrgid(d_statbuf.st_gid)->gr_name);
+                printf("%6lu ", (unsigned long)d_statbuf.st_size);
+                // mtime
+            }
+            printf("%s\n", d_file[j]->d_name);
+            free(d_file[j]);
+        }
+        free(d_file);
     }
+
     free(file);
-    free(d_file);
-    free(o_file);
+    free(dfile);
+    free(ofile);
     free(parameter);
     return 0;
 }
