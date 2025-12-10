@@ -34,22 +34,22 @@ int file_sort(const void* a, const void* b) {
     }
     int hidden_a = (cmp_a[0] == '.');
     int hidden_b = (cmp_b[0] == '.');
-    if (hidden_a && !hidden_b)
+    if (hidden_a && !hidden_b) {
         return -1;
-    if (!hidden_a && hidden_b)
+    }
+    if (!hidden_a && hidden_b) {
         return 1;
-
+    }
     return 0;
 }
 
 int main() {
-    const char* names[] = {".123", "B", "a", ".A", ".B", ".a", "123"};
+    const char* names[] = {"..", "B", "a", ".A", ".B", ".123", "."};
     int n = sizeof(names) / sizeof(names[0]);
     qsort(names, n, sizeof(char*), file_sort);
     printf("排序结果:\n");
     for (int i = 0; i < n; i++) {
         printf("%s\n", names[i]);
     }
-
     return 0;
 }
