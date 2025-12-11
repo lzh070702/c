@@ -2,20 +2,26 @@
 #include <ctype.h>
 #include <dirent.h>
 #include <grp.h>
+#include <locale.h>
 #include <pwd.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>
+#include <time.h>
 
-bool a = false, l = false, R = false;  // 选项
-bool t = false, r = false, s = false;  // 选项
-bool I = false;                        // 选项，为防止变量冲突，将i记为I
+// 选项
 
-int file_qsort(const void* a, const void* b) {
-    const char* cmp_a = *(const char**)a;
-    const char* cmp_b = *(const char**)b;
+bool a = false, l = false, R = false;
+bool t = false, r = false, s = false;
+bool I = false;  // 选项，为防止变量冲突，将i记为I
+
+// 文件路径的排序
+
+int file_qsort(const void* A, const void* B) {
+    const char* cmp_a = *(const char**)A;
+    const char* cmp_b = *(const char**)B;
     int str_a = (cmp_a[0] == '.') ? 1 : 0;
     int str_b = (cmp_b[0] == '.') ? 1 : 0;
     // 字母排序
@@ -53,30 +59,55 @@ int file_qsort(const void* a, const void* b) {
     return 0;
 }
 
-int r_file_qsort(const void* a, const void* b) {
-    return file_qsort(b, a);
+// 文件路径的排序-r
+
+int r_file_qsort(const void* A, const void* B) {
+    return file_qsort(B, A);
 }
 
-int t_file_qsort(const void* a, const void* b) {}
+// 文件路径的排序-t
 
-int tr_file_qsort(const void* a, const void* b) {
-    return t_file_qsort(b, a);
+int t_file_qsort(const void* A, const void* B) {
+    const char* cmp_a = *(const char**)A;
+    const char* cmp_b = *(const char**)B;
+    struct stat statbuf_a, statbuf_b;
+    stat(cmp_a, &statbuf_a);
+    stat(cmp_b, &statbuf_b);
+    return statbuf_b.st_mtime - statbuf_a.st_mtime;
 }
 
-int scandir_sort(const struct dirent** a, const struct dirent** b) {
-    const char* name_a = (*a)->d_name;
-    const char* name_b = (*b)->d_name;
+// 文件路径的排序-tr
+
+int tr_file_qsort(const void* A, const void* B) {
+    return t_file_qsort(B, A);
+}
+
+// 目录下文件的排序
+
+int scandir_sort(const struct dirent** A, const struct dirent** B) {
+    const char* name_a = (*A)->d_name;
+    const char* name_b = (*B)->d_name;
     return file_qsort(&name_a, &name_b);
 }
 
-int r_scandir_sort(const struct dirent** a, const struct dirent** b) {
-    return scandir_sort(b, a);
+// 目录下文件的排序-r
+
+int r_scandir_sort(const struct dirent** A, const struct dirent** B) {
+    return scandir_sort(B, A);
 }
 
-int t_scandir_sort(const struct dirent** a, const struct dirent** b) {}
+// 目录下文件的排序-t
 
-int tr_scandir_sort(const struct dirent** a, const struct dirent** b) {
-    return t_scandir_sort(b, a);
+int t_scandir_sort(const struct dirent** A, const struct dirent** B) {
+    const char* name_a = (*A)->d_name;
+    const char* name_b = (*B)->d_name;
+    return t_file_qsort(&name_a, &name_b);
+}
+
+// 目录下文件的排序-tr
+
+int tr_scandir_sort(const struct dirent** A, const struct dirent** B) {
+    return t_scandir_sort(B, A);
 }
 
 int main(int argc, char* argv[]) {
@@ -208,6 +239,11 @@ int main(int argc, char* argv[]) {
             printf("%s ", getgrgid(statbuf.st_gid)->gr_name);
             printf("%6lu ", (unsigned long)statbuf.st_size);
             // mtime
+            struct tm* local_time = localtime(&statbuf.st_mtime);
+            setlocale(LC_TIME, "zh_CN.UTF-8");
+            char time_str[32];
+            strftime(time_str, sizeof(time_str), "%m月 %d %H:%M", local_time);
+            printf("%s ", time_str);
         }
         printf("%s\n", ofile[i]);
     }
@@ -272,6 +308,12 @@ int main(int argc, char* argv[]) {
                 printf("%s ", getgrgid(d_statbuf.st_gid)->gr_name);
                 printf("%6lu ", (unsigned long)d_statbuf.st_size);
                 // mtime
+                struct tm* local_time = localtime(&d_statbuf.st_mtime);
+                setlocale(LC_TIME, "zh_CN.UTF-8");
+                char time_str[32];
+                strftime(time_str, sizeof(time_str), "%m月 %d %H:%M",
+                         local_time);
+                printf("%s ", time_str);
             }
             printf("%s\n", d_file[j]->d_name);
             free(d_file[j]);
