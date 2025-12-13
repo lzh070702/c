@@ -183,20 +183,28 @@ int main(int argc, char* argv[]) {
     // 选项的处理
 
     for (int i = 0; i < num; i++) {
-        if (parameter[i] == 'a') {
-            a = true;
-        } else if (parameter[i] == 'l') {
-            l = true;
-        } else if (parameter[i] == 'R') {
-            R = true;
-        } else if (parameter[i] == 't') {
-            t = true;
-        } else if (parameter[i] == 'r') {
-            r = true;
-        } else if (parameter[i] == 's') {
-            s = true;
-        } else {
-            I = true;
+        switch (parameter[i]) {
+            case 'a':
+                a = true;
+                break;
+            case 'l':
+                l = true;
+                break;
+            case 'R':
+                R = true;
+                break;
+            case 't':
+                t = true;
+                break;
+            case 'r':
+                r = true;
+                break;
+            case 's':
+                s = true;
+                break;
+            case 'i':
+                I = true;
+                break;
         }
     }
 
@@ -255,7 +263,7 @@ int main(int argc, char* argv[]) {
     // 目录文件选项的执行
 
     for (int i = 0; i < dfile_num; i++) {
-        if (dfile_num > 1) {
+        if (dfile_num > 1 || R) {
             printf("%s:\n", dfile[i]);
         }
         struct dirent** d_file;  // 目录下文件的结构体指针数组
