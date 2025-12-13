@@ -24,8 +24,12 @@ int file_qsort(const void* A, const void* B) {
     const char* cmp_b = *(const char**)B;
     int str_a = (cmp_a[0] == '.') ? 1 : 0;
     int str_b = (cmp_b[0] == '.') ? 1 : 0;
-    // 字母排序
+    // 排序
     while (cmp_a[str_a] && cmp_b[str_b]) {
+        if (cmp_a[str_a] < 0 || cmp_b[str_b] < 0) {
+            // 中英排序
+            return cmp_a[str_a] - cmp_b[str_b];
+        }
         int lower_a = tolower((unsigned char)cmp_a[str_a]);
         int lower_b = tolower((unsigned char)cmp_b[str_b]);
         if (lower_a != lower_b) {
@@ -124,7 +128,7 @@ int main(int argc, char* argv[]) {
 
     for (int i = 1; i < argc; i++) {
         // 分别存放文件路径和选项
-        if (argv[i][0] != '-') {
+        if (argv[i][0] != '-' || (strlen(argv[i]) == 1)) {
             // 存放文件路径
             file[file_num++] = argv[i];
             continue;
@@ -162,7 +166,7 @@ int main(int argc, char* argv[]) {
         struct stat statbuf;
         if (stat(file[i], &statbuf) == -1) {
             // 文件路径错误
-            printf("ls: 无法访问 '%s': 没有那个文件或目录", file[i]);
+            printf("ls: 无法访问 '%s': 没有那个文件或目录\n", file[i]);
         } else if (S_ISREG(statbuf.st_mode)) {
             // 普通文件路径
             ofile[ofile_num++] = file[i];
@@ -252,7 +256,7 @@ int main(int argc, char* argv[]) {
 
     for (int i = 0; i < dfile_num; i++) {
         if (dfile_num > 1) {
-            printf("%s:", dfile[i]);
+            printf("%s:\n", dfile[i]);
         }
         struct dirent** d_file;  // 目录下文件的结构体指针数组
         int d_file_num = 0;
