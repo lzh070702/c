@@ -2,20 +2,23 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+typedef int ElemType;  // 数据类型为int
+
 typedef struct node {
-    int data;
+    ElemType data;
     struct node* next;
 } Node;
 
-Node* init_list();                                 // 初始化链表
-void head_insert(Node* list, int data);            // 头节点插入
-bool given_insert(Node* list, int pos, int data);  // 指定节点插入
-Node* get_tail_node(Node* list);                   // 获取尾节点
-Node* tail_insert(Node* tail_node, int data);      // 尾节点插入并返回新的尾节点
-bool del_node(Node* list, int pos);                // 删除指定节点
-void print(Node* node);                            // 遍历输出链表
-int listlen(Node* list);                           // 获取链表长度
-void free_list(Node* list);                        // 释放链表
+Node* init_list();                                      // 初始化链表
+void head_insert(Node* list, ElemType data);            // 头节点插入
+bool given_insert(Node* list, int pos, ElemType data);  // 指定节点插入
+Node* get_tail_node(Node* list);                        // 获取尾节点
+Node* tail_insert(Node* tail_node,
+                  ElemType data);    // 尾节点插入并返回新的尾节点
+bool del_node(Node* list, int pos);  // 删除指定节点
+void print(Node* node);              // 遍历输出链表
+int listlen(Node* list);             // 获取链表长度
+void free_list(Node* list);          // 释放链表
 
 int main() {
     Node* list_1 = init_list();
@@ -47,14 +50,14 @@ Node* init_list(void) {
     return head_node;
 }
 
-void head_insert(Node* list, int data) {
+void head_insert(Node* list, ElemType data) {
     Node* new_node = (Node*)malloc(sizeof(Node));
     new_node->data = data;
     new_node->next = list->next;
     list->next = new_node;
 }
 
-bool given_insert(Node* list, int pos, int data) {
+bool given_insert(Node* list, int pos, ElemType data) {
     Node* next_node = list;
     for (int i = 0; i < pos - 1; i++) {
         next_node = next_node->next;
@@ -78,7 +81,7 @@ Node* get_tail_node(Node* list) {
     return next_node;
 }
 
-Node* tail_insert(Node* tail_node, int data) {
+Node* tail_insert(Node* tail_node, ElemType data) {
     Node* new_node = (Node*)malloc(sizeof(Node));
     new_node->data = data;
     new_node->next = NULL;
@@ -129,8 +132,8 @@ int listlen(Node* list) {
 }
 
 void free_list(Node* list) {
-    for (int i = 0;i<listlen(list);i++) {
-        del_node(list,1);
+    for (int i = 0; i < listlen(list); i++) {
+        del_node(list, 1);
     }
     list->next = NULL;
 }
