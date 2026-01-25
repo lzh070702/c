@@ -9,7 +9,7 @@ typedef struct node {
     struct node* next;
 } Node;
 
-Node* init_list();                                      // 初始化链表
+Node* init_list(void);                                      // 初始化链表
 void head_insert(Node* list, ElemType data);            // 头节点插入
 bool given_insert(Node* list, int pos, ElemType data);  // 指定节点插入
 Node* get_tail_node(Node* list);                        // 获取尾节点
