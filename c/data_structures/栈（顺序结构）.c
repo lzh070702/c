@@ -18,7 +18,7 @@ bool get_top(STACK* s, ElemType* e);  // 获取栈顶元素
 
 int main() {
     STACK s1;
-    init_satck(&s1);
+    init_stack(&s1);
     push(&s1, 10);
     push(&s1, 20);
     push(&s1, 30);
