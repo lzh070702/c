@@ -10,7 +10,7 @@ typedef struct stack {
     int top;
 } STACK;
 
-void init_STACK(STACK* s);            // 初始化栈
+void init_stack(STACK* s);            // 初始化栈
 bool is_empty(STACK* s);              // 判断是否为空
 bool push(STACK* s, ElemType e);      // 压栈
 bool pop(STACK* s, ElemType* e);      // 出栈
@@ -18,7 +18,7 @@ bool get_top(STACK* s, ElemType* e);  // 获取栈顶元素
 
 int main() {
     STACK s1;
-    init_STACK(&s1);
+    init_satck(&s1);
     push(&s1, 10);
     push(&s1, 20);
     push(&s1, 30);
@@ -31,7 +31,7 @@ int main() {
     return 0;
 }
 
-void init_STACK(STACK* s) {
+void init_stack(STACK* s) {
     s->top = -1;
 }
 

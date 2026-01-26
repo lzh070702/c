@@ -9,14 +9,14 @@ typedef struct stack {
     struct stack* next;
 } STACK;
 
-STACK* init_STACK(void);              // 初始化栈
+STACK* init_stack(void);              // 初始化栈
 bool is_empty(STACK* s);              // 判断是否为空
 void push(STACK* s, ElemType e);      // 压栈
 bool pop(STACK* s, ElemType* e);      // 出栈
 bool get_top(STACK* s, ElemType* e);  // 获取栈顶元素
 
 int main() {
-    STACK* s = init_STACK();
+    STACK* s = init_stack();
     push(s, 10);
     push(s, 20);
     push(s, 30);
@@ -29,7 +29,7 @@ int main() {
     return 0;
 }
 
-STACK* init_STACK(void) {
+STACK* init_stack(void) {
     STACK* s = (STACK*)malloc(sizeof(STACK));
     s->data = 0;
     s->next = NULL;
